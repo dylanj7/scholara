@@ -6,6 +6,11 @@ import { supabase, Message } from '@/lib/supabase';
 
 type Subject = 'Essay Writing' | 'Mathematics';
 
+interface ChatMessage {
+  role: 'user' | 'assistant';
+  content: string;
+}
+
 export default function StudentChat() {
   const [studentName, setStudentName] = useState('');
   const [subject, setSubject] = useState<Subject>('Essay Writing');
@@ -84,57 +89,62 @@ export default function StudentChat() {
       setMessages((prev) => [...prev, userMsgData]);
     }
 
-    const aiResponse = generateAIResponse(userMessage, subject);
+    try {
+      const chatHistory: ChatMessage[] = messages.map((msg) => ({
+        role: msg.role === 'student' ? 'user' : 'assistant',
+        content: msg.content,
+      }));
+      chatHistory.push({ role: 'user', content: userMessage });
 
-    const { data: aiMsgData } = await supabase
-      .from('messages')
-      .insert({
-        session_id: sessionId,
-        role: 'assistant',
-        content: aiResponse,
-      })
-      .select()
-      .single();
+      const response = await fetch('/api/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          messages: chatHistory,
+          subject: subject,
+          studentName: studentName,
+        }),
+      });
 
-    if (aiMsgData) {
-      setMessages((prev) => [...prev, aiMsgData]);
+      if (!response.ok) {
+        throw new Error('Failed to get response');
+      }
+
+      const data = await response.json();
+      const aiResponse = data.message;
+
+      const { data: aiMsgData } = await supabase
+        .from('messages')
+        .insert({
+          session_id: sessionId,
+          role: 'assistant',
+          content: aiResponse,
+        })
+        .select()
+        .single();
+
+      if (aiMsgData) {
+        setMessages((prev) => [...prev, aiMsgData]);
+      }
+    } catch (error) {
+      console.error('Error sending message:', error);
+      const errorMessage = 'Sorry, I encountered an error. Please try again.';
+      const { data: errorMsgData } = await supabase
+        .from('messages')
+        .insert({
+          session_id: sessionId,
+          role: 'assistant',
+          content: errorMessage,
+        })
+        .select()
+        .single();
+
+      if (errorMsgData) {
+        setMessages((prev) => [...prev, errorMsgData]);
+      }
     }
 
     setIsLoading(false);
-  };
-
-  const generateAIResponse = (message: string, subj: Subject): string => {
-    const lowerMessage = message.toLowerCase();
-
-    if (subj === 'Essay Writing') {
-      if (lowerMessage.includes('thesis') || lowerMessage.includes('argument')) {
-        return "A strong thesis statement is the foundation of any good essay. It should be specific, arguable, and provide a roadmap for your reader. Try to make it one clear sentence that states your main argument. Would you like to share what you have so far, and I can help you refine it?";
-      }
-      if (lowerMessage.includes('introduction') || lowerMessage.includes('intro')) {
-        return "Your introduction should hook the reader, provide necessary background, and end with your thesis statement. Start with something engaging - a question, a surprising fact, or a relevant anecdote. What topic are you writing about?";
-      }
-      if (lowerMessage.includes('conclusion')) {
-        return "A good conclusion restates your thesis in new words, summarizes your main points, and leaves the reader with something to think about. Avoid introducing new information here. What's the main argument of your essay?";
-      }
-      if (lowerMessage.includes('help') || lowerMessage.includes('start')) {
-        return "I'd be happy to help! Let's start by understanding your assignment. What topic are you writing about, and what type of essay is it (argumentative, expository, narrative, etc.)?";
-      }
-      return "That's a great question about essay writing. Remember that good writing is about clarity and organization. Each paragraph should have a clear purpose and connect to your thesis. What specific aspect of your essay would you like to work on?";
-    } else {
-      if (lowerMessage.includes('equation') || lowerMessage.includes('solve')) {
-        return "I'd be happy to help you solve that! To work through it step by step, could you share the specific equation or problem you're working on? Remember, in math, we often isolate the variable by performing the same operation on both sides.";
-      }
-      if (lowerMessage.includes('formula') || lowerMessage.includes('formulas')) {
-        return "Formulas are essential tools in mathematics. They help us express relationships between quantities. Which formula are you working with? If you share the topic (like area, quadratic, or trigonometry), I can help explain how to apply it.";
-      }
-      if (lowerMessage.includes('graph') || lowerMessage.includes('plot')) {
-        return "Graphing helps visualize mathematical relationships. The key is understanding what each axis represents and how the equation translates to points on the graph. What type of function or equation are you trying to graph?";
-      }
-      if (lowerMessage.includes('help') || lowerMessage.includes('start')) {
-        return "I'm here to help! Math becomes easier when we break problems into smaller steps. What topic or problem are you working on? Whether it's arithmetic, algebra, geometry, or calculus, we can work through it together.";
-      }
-      return "Good question! Let's work through this step by step. In mathematics, breaking down problems into smaller parts often makes them more manageable. Could you share the specific problem or concept you're working on?";
-    }
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -216,7 +226,7 @@ export default function StudentChat() {
             Scholara
           </h1>
           <div className="text-sm text-gray-500">
-            {subject} • {studentName}
+            {subject} - {studentName}
           </div>
         </div>
       </header>
