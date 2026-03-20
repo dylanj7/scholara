@@ -1,19 +1,33 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { X, Eye, Lock } from 'lucide-react';
-import { supabase, Session, Message } from '@/lib/supabase';
+import { supabase } from '@/lib/supabase';
 
-interface SessionWithMessages extends Session {
-  messages?: Message[];
+interface MessageEntry {
+  role: 'student' | 'assistant';
+  content: string;
+  image_url?: string | null;
+  created_at?: string;
+}
+
+interface Session {
+  id: string;
+  student_name: string;
+  subject: string;
+  started_at: string;
+  ended_at: string | null;
+  duration: number | null;
+  messages: MessageEntry[] | null;
+  created_at: string;
 }
 
 export default function TeacherDashboard() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
-  const [sessions, setSessions] = useState<SessionWithMessages[]>([]);
-  const [selectedSession, setSelectedSession] = useState<SessionWithMessages | null>(null);
+  const [sessions, setSessions] = useState<Session[]>([]);
+  const [selectedSession, setSelectedSession] = useState<Session | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
   const handleLogin = (e: React.FormEvent) => {
@@ -42,21 +56,6 @@ export default function TeacherDashboard() {
     setIsLoading(false);
   };
 
-  const viewSession = async (session: SessionWithMessages) => {
-    const { data: messages, error } = await supabase
-      .from('messages')
-      .select('*')
-      .eq('session_id', session.id)
-      .order('created_at', { ascending: true });
-
-    if (error) {
-      console.error('Error loading messages:', error);
-      return;
-    }
-
-    setSelectedSession({ ...session, messages: messages || [] });
-  };
-
   const formatDate = (dateStr: string) => {
     const date = new Date(dateStr);
     return date.toLocaleDateString('en-US', {
@@ -74,13 +73,22 @@ export default function TeacherDashboard() {
     });
   };
 
-  const calculateDuration = (session: Session) => {
-    const start = new Date(session.started_at);
-    const end = session.ended_at ? new Date(session.ended_at) : new Date();
-    const diff = Math.floor((end.getTime() - start.getTime()) / 1000 / 60);
-    if (diff < 1) return '< 1 min';
-    if (diff === 1) return '1 min';
-    return `${diff} mins`;
+  const formatDuration = (session: Session) => {
+    if (session.duration != null) {
+      const mins = Math.floor(session.duration / 60);
+      const secs = session.duration % 60;
+      if (mins === 0) return `${secs}s`;
+      if (secs === 0) return `${mins} min${mins !== 1 ? 's' : ''}`;
+      return `${mins}m ${secs}s`;
+    }
+    if (session.ended_at) {
+      const diff = Math.floor(
+        (new Date(session.ended_at).getTime() - new Date(session.started_at).getTime()) / 1000 / 60
+      );
+      if (diff < 1) return '< 1 min';
+      return `${diff} min${diff !== 1 ? 's' : ''}`;
+    }
+    return '—';
   };
 
   if (!isAuthenticated) {
@@ -190,11 +198,11 @@ export default function TeacherDashboard() {
                         </span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                        {calculateDuration(session)}
+                        {formatDuration(session)}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-right">
                         <button
-                          onClick={() => viewSession(session)}
+                          onClick={() => setSelectedSession(session)}
                           className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-[#1B4F8A] hover:bg-[#1B4F8A]/5 rounded-md transition-colors"
                         >
                           <Eye className="w-4 h-4" />
@@ -219,7 +227,10 @@ export default function TeacherDashboard() {
                   Session Transcript
                 </h3>
                 <p className="text-sm text-gray-500 mt-0.5">
-                  {selectedSession.student_name} - {selectedSession.subject}
+                  {selectedSession.student_name} — {selectedSession.subject}
+                  {selectedSession.duration != null && (
+                    <span className="ml-2 text-gray-400">· {formatDuration(selectedSession)}</span>
+                  )}
                 </p>
               </div>
               <button
@@ -231,40 +242,51 @@ export default function TeacherDashboard() {
             </div>
 
             <div className="flex-1 overflow-y-auto px-6 py-4">
-              <div className="space-y-4">
-                {selectedSession.messages?.map((message) => (
-                  <div
-                    key={message.id}
-                    className={`flex ${message.role === 'student' ? 'justify-end' : 'justify-start'}`}
-                  >
+              {!selectedSession.messages || selectedSession.messages.length === 0 ? (
+                <div className="text-center text-gray-400 text-sm py-8">
+                  No messages recorded for this session.
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {selectedSession.messages.map((message, index) => (
                     <div
-                      className={`max-w-[80%] px-4 py-3 rounded-2xl ${
-                        message.role === 'student'
-                          ? 'bg-[#1B4F8A] text-white rounded-br-md'
-                          : 'bg-gray-100 text-gray-800 rounded-bl-md'
-                      }`}
+                      key={index}
+                      className={`flex ${message.role === 'student' ? 'justify-end' : 'justify-start'}`}
                     >
-                      {message.image_url && (
-                        <img
-                          src={message.image_url}
-                          alt="Uploaded math problem"
-                          className="mb-2 rounded-lg max-w-full max-h-48 object-contain bg-white"
-                        />
-                      )}
-                      {message.content && message.content !== 'Uploaded an image' && (
-                        <p className="text-sm leading-relaxed whitespace-pre-wrap">
-                          {message.content}
+                      <div
+                        className={`max-w-[80%] px-4 py-3 rounded-2xl ${
+                          message.role === 'student'
+                            ? 'bg-[#1B4F8A] text-white rounded-br-md'
+                            : 'bg-gray-100 text-gray-800 rounded-bl-md'
+                        }`}
+                      >
+                        <p className="text-xs font-medium mb-1 opacity-60 capitalize">
+                          {message.role === 'student' ? 'Student' : 'Sage'}
                         </p>
-                      )}
-                      <p className={`text-xs mt-2 ${
-                        message.role === 'student' ? 'text-white/70' : 'text-gray-400'
-                      }`}>
-                        {formatTime(message.created_at)}
-                      </p>
+                        {message.image_url && (
+                          <img
+                            src={message.image_url}
+                            alt="Uploaded image"
+                            className="mb-2 rounded-lg max-w-full max-h-48 object-contain bg-white"
+                          />
+                        )}
+                        {message.content && message.content !== 'Uploaded an image' && (
+                          <p className="text-sm leading-relaxed whitespace-pre-wrap">
+                            {message.content}
+                          </p>
+                        )}
+                        {message.created_at && (
+                          <p className={`text-xs mt-2 ${
+                            message.role === 'student' ? 'text-white/60' : 'text-gray-400'
+                          }`}>
+                            {formatTime(message.created_at)}
+                          </p>
+                        )}
+                      </div>
                     </div>
-                  </div>
-                ))}
-              </div>
+                  ))}
+                </div>
+              )}
             </div>
 
             <div className="px-6 py-4 border-t border-gray-200">

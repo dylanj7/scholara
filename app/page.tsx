@@ -22,6 +22,7 @@ export default function StudentChat() {
   const [subject, setSubject] = useState<Subject>('Essay Writing');
   const [sessionStarted, setSessionStarted] = useState(false);
   const [sessionId, setSessionId] = useState<string | null>(null);
+  const [sessionStartTime, setSessionStartTime] = useState<Date | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputValue, setInputValue] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -59,6 +60,7 @@ export default function StudentChat() {
     }
 
     setSessionId(data.id);
+    setSessionStartTime(new Date());
     setSessionStarted(true);
 
     const welcomeMessage = subject === 'Essay Writing'
@@ -74,9 +76,29 @@ export default function StudentChat() {
     if (msgData) setMessages([msgData]);
   };
 
-  const endSession = () => {
+  const endSession = async () => {
+    if (sessionId && sessionStartTime) {
+      const duration = Math.floor((Date.now() - sessionStartTime.getTime()) / 1000);
+      const messagesJson = messages.map((msg) => ({
+        role: msg.role,
+        content: msg.content,
+        image_url: msg.image_url ?? null,
+        created_at: msg.created_at,
+      }));
+
+      await supabase
+        .from('sessions')
+        .update({
+          ended_at: new Date().toISOString(),
+          duration,
+          messages: messagesJson,
+        })
+        .eq('id', sessionId);
+    }
+
     setSessionStarted(false);
     setSessionId(null);
+    setSessionStartTime(null);
     setMessages([]);
     setInputValue('');
     setPendingImage(null);
