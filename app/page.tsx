@@ -216,22 +216,28 @@ export default function StudentChat() {
 
   if (!sessionStarted) {
     return (
-      <div className="min-h-screen bg-white flex flex-col">
+      <div className="min-h-screen flex flex-col" style={{ backgroundColor: '#FDF6F0' }}>
         <div className="flex-1 flex flex-col items-center justify-center px-4 py-12">
           <div className="w-full max-w-md">
             <div className="mb-10 text-center">
-              <div className="inline-block mb-4 px-3 py-1 rounded-full bg-[#EBF2FB] text-[#1B4F8A] text-xs font-medium tracking-wide uppercase">
+              <div
+                className="inline-block mb-4 px-3 py-1 rounded-full text-xs font-medium tracking-wide uppercase"
+                style={{ backgroundColor: '#FAECE7', color: '#993C1D' }}
+              >
                 AI Tutoring
               </div>
-              <blockquote className="text-2xl font-semibold text-gray-800 leading-snug mb-3">
+              <blockquote className="text-2xl font-semibold leading-snug mb-3" style={{ color: '#712B13' }}>
                 "{QUOTE.text}"
               </blockquote>
-              <p className="text-sm text-gray-400">— {QUOTE.author}</p>
+              <p className="text-sm" style={{ color: '#D85A30', opacity: 0.7 }}>— {QUOTE.author}</p>
             </div>
 
-            <div className="bg-gray-50 rounded-2xl border border-gray-100 p-6 space-y-5">
+            <div
+              className="rounded-2xl p-6 space-y-5"
+              style={{ backgroundColor: '#FFFFFF', border: '1px solid #F5C4B3' }}
+            >
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium mb-2" style={{ color: '#712B13' }}>
                   Select Subject
                 </label>
                 <div className="flex gap-2">
@@ -239,11 +245,12 @@ export default function StudentChat() {
                     <button
                       key={s}
                       onClick={() => setSubject(s)}
-                      className={`flex-1 py-2.5 px-3 rounded-lg border-2 text-sm font-medium transition-all ${
+                      className="flex-1 py-2.5 px-3 rounded-lg border-2 text-sm font-medium transition-all"
+                      style={
                         subject === s
-                          ? 'border-[#1B4F8A] bg-[#1B4F8A] text-white shadow-sm'
-                          : 'border-gray-200 bg-white text-gray-600 hover:border-gray-300'
-                      }`}
+                          ? { borderColor: '#D85A30', backgroundColor: '#D85A30', color: '#FFFFFF' }
+                          : { borderColor: '#F5C4B3', backgroundColor: '#FAECE7', color: '#993C1D' }
+                      }
                     >
                       {s}
                     </button>
@@ -252,7 +259,7 @@ export default function StudentChat() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium mb-2" style={{ color: '#712B13' }}>
                   Your First Name
                 </label>
                 <input
@@ -261,14 +268,30 @@ export default function StudentChat() {
                   onChange={(e) => setStudentName(e.target.value)}
                   onKeyDown={(e) => e.key === 'Enter' && startSession()}
                   placeholder="Enter your first name"
-                  className="w-full px-4 py-3 rounded-lg border border-gray-200 bg-white focus:border-[#1B4F8A] focus:ring-1 focus:ring-[#1B4F8A] outline-none text-gray-900 placeholder-gray-400"
+                  className="w-full px-4 py-3 rounded-lg outline-none text-sm transition-colors"
+                  style={{
+                    border: '1px solid #F5C4B3',
+                    backgroundColor: '#FFFFFF',
+                    color: '#712B13',
+                  }}
+                  onFocus={(e) => {
+                    e.target.style.borderColor = '#D85A30';
+                    e.target.style.boxShadow = '0 0 0 1px #D85A30';
+                  }}
+                  onBlur={(e) => {
+                    e.target.style.borderColor = '#F5C4B3';
+                    e.target.style.boxShadow = 'none';
+                  }}
                 />
               </div>
 
               <button
                 onClick={startSession}
                 disabled={!studentName.trim()}
-                className="w-full py-3 px-4 bg-[#1B4F8A] text-white rounded-lg font-medium hover:bg-[#163f6e] disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                className="w-full py-3 px-4 rounded-lg font-medium transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                style={{ backgroundColor: '#D85A30', color: '#FFFFFF' }}
+                onMouseOver={(e) => { if (studentName.trim()) (e.target as HTMLButtonElement).style.backgroundColor = '#993C1D'; }}
+                onMouseOut={(e) => { (e.target as HTMLButtonElement).style.backgroundColor = '#D85A30'; }}
               >
                 Start Session
               </button>
@@ -280,24 +303,30 @@ export default function StudentChat() {
   }
 
   return (
-    <div className="flex flex-col" style={{ height: 'calc(100vh - 57px)' }}>
-      <div className="border-b border-gray-100 py-2 px-4 bg-white">
+    <div className="flex flex-col" style={{ height: 'calc(100vh - 57px)', backgroundColor: '#FDF6F0' }}>
+      <div className="py-2 px-4" style={{ borderBottom: '1px solid #F5C4B3', backgroundColor: '#FFFFFF' }}>
         <div className="max-w-3xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-3">
             <button
               onClick={endSession}
-              className="flex items-center gap-1.5 text-sm text-gray-400 hover:text-gray-700 transition-colors"
+              className="flex items-center gap-1.5 text-sm transition-colors"
+              style={{ color: '#F0997B' }}
+              onMouseOver={(e) => (e.currentTarget.style.color = '#712B13')}
+              onMouseOut={(e) => (e.currentTarget.style.color = '#F0997B')}
             >
               <ChevronLeft className="w-4 h-4" />
               Back
             </button>
-            <span className="text-gray-200">|</span>
-            <span className="text-sm text-gray-600 font-medium">{studentName}</span>
-            <span className="text-xs text-gray-400">&mdash; {subject}</span>
+            <span style={{ color: '#F5C4B3' }}>|</span>
+            <span className="text-sm font-medium" style={{ color: '#712B13' }}>{studentName}</span>
+            <span className="text-xs" style={{ color: '#D85A30', opacity: 0.7 }}>&mdash; {subject}</span>
           </div>
           <div className="flex items-center gap-2">
             {subject === 'Mathematics' && (
-              <span className="inline-flex items-center gap-1 text-xs bg-blue-50 text-[#1B4F8A] px-2 py-0.5 rounded-full border border-blue-100">
+              <span
+                className="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full"
+                style={{ backgroundColor: '#FAECE7', color: '#993C1D', border: '1px solid #F5C4B3' }}
+              >
                 <ImageIcon className="w-3 h-3" />
                 Image upload on
               </span>
@@ -305,7 +334,16 @@ export default function StudentChat() {
             <button
               onClick={endSession}
               title="New session"
-              className="flex items-center gap-1.5 text-xs text-gray-400 hover:text-[#1B4F8A] transition-colors px-2 py-1 rounded-md hover:bg-gray-50"
+              className="flex items-center gap-1.5 text-xs transition-colors px-2 py-1 rounded-md"
+              style={{ color: '#F0997B' }}
+              onMouseOver={(e) => {
+                e.currentTarget.style.color = '#D85A30';
+                e.currentTarget.style.backgroundColor = '#FAECE7';
+              }}
+              onMouseOut={(e) => {
+                e.currentTarget.style.color = '#F0997B';
+                e.currentTarget.style.backgroundColor = 'transparent';
+              }}
             >
               <RefreshCw className="w-3.5 h-3.5" />
               New session
@@ -323,11 +361,21 @@ export default function StudentChat() {
                 className={`flex ${message.role === 'student' ? 'justify-end' : 'justify-start'}`}
               >
                 <div
-                  className={`max-w-[80%] px-4 py-3 rounded-2xl ${
+                  className="max-w-[80%] px-4 py-3 rounded-2xl"
+                  style={
                     message.role === 'student'
-                      ? 'bg-[#1B4F8A] text-white rounded-br-md'
-                      : 'bg-gray-100 text-gray-800 rounded-bl-md'
-                  }`}
+                      ? {
+                          backgroundColor: '#993C1D',
+                          color: '#FAECE7',
+                          borderBottomRightRadius: '6px',
+                        }
+                      : {
+                          backgroundColor: '#FFFFFF',
+                          color: '#712B13',
+                          border: '1px solid #F5C4B3',
+                          borderBottomLeftRadius: '6px',
+                        }
+                  }
                 >
                   {message.image_url && (
                     <img
@@ -346,11 +394,18 @@ export default function StudentChat() {
             ))}
             {isLoading && (
               <div className="flex justify-start">
-                <div className="bg-gray-100 text-gray-800 px-4 py-3 rounded-2xl rounded-bl-md">
+                <div
+                  className="px-4 py-3 rounded-2xl"
+                  style={{
+                    backgroundColor: '#FFFFFF',
+                    border: '1px solid #F5C4B3',
+                    borderBottomLeftRadius: '6px',
+                  }}
+                >
                   <div className="flex space-x-1">
-                    <div className="w-2 h-2 bg-gray-400 rounded-full animate-pulse" />
-                    <div className="w-2 h-2 bg-gray-400 rounded-full animate-pulse delay-75" />
-                    <div className="w-2 h-2 bg-gray-400 rounded-full animate-pulse delay-150" />
+                    <div className="w-2 h-2 rounded-full animate-pulse" style={{ backgroundColor: '#F0997B' }} />
+                    <div className="w-2 h-2 rounded-full animate-pulse delay-75" style={{ backgroundColor: '#F0997B' }} />
+                    <div className="w-2 h-2 rounded-full animate-pulse delay-150" style={{ backgroundColor: '#F0997B' }} />
                   </div>
                 </div>
               </div>
@@ -359,26 +414,28 @@ export default function StudentChat() {
           </div>
         </div>
 
-        <div className="border-t border-gray-100 px-4 py-4">
+        <div className="px-4 py-4" style={{ borderTop: '1px solid #F5C4B3' }}>
           {pendingImage && (
             <div className="mb-3 flex items-start gap-2">
               <div className="relative inline-block">
                 <img
                   src={pendingImage.previewUrl}
                   alt="Pending upload"
-                  className="h-20 w-20 object-cover rounded-lg border border-gray-200"
+                  className="h-20 w-20 object-cover rounded-lg"
+                  style={{ border: '1px solid #F5C4B3' }}
                 />
                 <button
                   onClick={() => {
                     URL.revokeObjectURL(pendingImage.previewUrl);
                     setPendingImage(null);
                   }}
-                  className="absolute -top-2 -right-2 w-5 h-5 bg-gray-700 text-white rounded-full flex items-center justify-center hover:bg-gray-900"
+                  className="absolute -top-2 -right-2 w-5 h-5 rounded-full flex items-center justify-center"
+                  style={{ backgroundColor: '#712B13', color: '#FAECE7' }}
                 >
                   <X className="w-3 h-3" />
                 </button>
               </div>
-              <span className="text-xs text-gray-500 mt-1">Image ready to send</span>
+              <span className="text-xs mt-1" style={{ color: '#D85A30' }}>Image ready to send</span>
             </div>
           )}
 
@@ -395,7 +452,16 @@ export default function StudentChat() {
                 <button
                   onClick={() => fileInputRef.current?.click()}
                   disabled={isLoading || isUploading}
-                  className="px-3 py-3 text-gray-400 hover:text-[#1B4F8A] hover:bg-gray-50 rounded-lg border border-gray-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="px-3 py-3 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  style={{ color: '#F0997B', border: '1px solid #F5C4B3', backgroundColor: '#FFFFFF' }}
+                  onMouseOver={(e) => {
+                    (e.currentTarget as HTMLButtonElement).style.color = '#D85A30';
+                    (e.currentTarget as HTMLButtonElement).style.backgroundColor = '#FAECE7';
+                  }}
+                  onMouseOut={(e) => {
+                    (e.currentTarget as HTMLButtonElement).style.color = '#F0997B';
+                    (e.currentTarget as HTMLButtonElement).style.backgroundColor = '#FFFFFF';
+                  }}
                   title="Upload image"
                 >
                   <Paperclip className="w-5 h-5" />
@@ -408,12 +474,33 @@ export default function StudentChat() {
               onChange={(e) => setInputValue(e.target.value)}
               onKeyDown={handleKeyDown}
               placeholder={pendingImage ? 'Add a message (optional)...' : 'Type your message...'}
-              className="flex-1 px-4 py-3 rounded-lg border border-gray-200 focus:border-[#1B4F8A] focus:ring-1 focus:ring-[#1B4F8A] outline-none text-gray-900 placeholder-gray-400"
+              className="flex-1 px-4 py-3 rounded-lg outline-none text-sm"
+              style={{
+                border: '1px solid #F5C4B3',
+                backgroundColor: '#FFFFFF',
+                color: '#712B13',
+              }}
+              onFocus={(e) => {
+                e.target.style.borderColor = '#D85A30';
+                e.target.style.boxShadow = '0 0 0 1px #D85A30';
+              }}
+              onBlur={(e) => {
+                e.target.style.borderColor = '#F5C4B3';
+                e.target.style.boxShadow = 'none';
+              }}
             />
             <button
               onClick={sendMessage}
               disabled={(!inputValue.trim() && !pendingImage) || isLoading || isUploading}
-              className="px-4 py-3 bg-[#1B4F8A] text-white rounded-lg hover:bg-[#163f6e] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              className="px-4 py-3 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              style={{ backgroundColor: '#D85A30', color: '#FFFFFF' }}
+              onMouseOver={(e) => {
+                if (!((e.currentTarget as HTMLButtonElement).disabled))
+                  (e.currentTarget as HTMLButtonElement).style.backgroundColor = '#993C1D';
+              }}
+              onMouseOut={(e) => {
+                (e.currentTarget as HTMLButtonElement).style.backgroundColor = '#D85A30';
+              }}
             >
               <Send className="w-5 h-5" />
             </button>

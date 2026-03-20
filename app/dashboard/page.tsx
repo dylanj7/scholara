@@ -22,6 +22,12 @@ interface Session {
   created_at: string;
 }
 
+const AVATAR_STYLES = [
+  { bg: '#FAECE7', text: '#993C1D' },
+  { bg: '#FAEEDA', text: '#854F0B' },
+  { bg: '#FDF6F0', text: '#712B13' },
+];
+
 export default function TeacherDashboard() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [password, setPassword] = useState('');
@@ -115,35 +121,54 @@ export default function TeacherDashboard() {
 
   if (!isAuthenticated) {
     return (
-      <div className="min-h-screen bg-white flex flex-col items-center justify-center px-4">
+      <div
+        className="min-h-screen flex flex-col items-center justify-center px-4"
+        style={{ backgroundColor: '#FDF6F0' }}
+      >
         <div className="w-full max-w-sm">
           <div className="text-center mb-8">
-            <p className="text-gray-500 text-sm">Enter the teacher password to continue</p>
+            <p className="text-sm" style={{ color: '#993C1D' }}>Enter the teacher password to continue</p>
           </div>
 
           <form onSubmit={handleLogin} className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium mb-2" style={{ color: '#712B13' }}>
                 Password
               </label>
               <div className="relative">
-                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5" style={{ color: '#F0997B' }} />
                 <input
                   type="password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="Enter dashboard password"
-                  className="w-full pl-10 pr-4 py-3 rounded-lg border border-gray-200 focus:border-[#1B4F8A] focus:ring-1 focus:ring-[#1B4F8A] outline-none text-gray-900 placeholder-gray-400"
+                  className="w-full pl-10 pr-4 py-3 rounded-lg outline-none text-sm"
+                  style={{
+                    border: '1px solid #F5C4B3',
+                    backgroundColor: '#FFFFFF',
+                    color: '#712B13',
+                  }}
+                  onFocus={(e) => {
+                    e.target.style.borderColor = '#D85A30';
+                    e.target.style.boxShadow = '0 0 0 1px #D85A30';
+                  }}
+                  onBlur={(e) => {
+                    e.target.style.borderColor = '#F5C4B3';
+                    e.target.style.boxShadow = 'none';
+                  }}
                 />
               </div>
               {error && (
-                <p className="mt-2 text-sm text-red-600">{error}</p>
+                <p className="mt-2 text-sm" style={{ color: '#D85A30' }}>{error}</p>
               )}
             </div>
 
             <button
               type="submit"
-              className="w-full py-3 px-4 bg-[#1B4F8A] text-white rounded-lg font-medium hover:bg-[#163f6e] transition-colors"
+              className="w-full py-3 px-4 rounded-lg font-medium transition-colors"
+              style={{ backgroundColor: '#D85A30', color: '#FFFFFF' }}
+              onMouseOver={(e) => (e.currentTarget.style.backgroundColor = '#993C1D')}
+              onMouseOut={(e) => (e.currentTarget.style.backgroundColor = '#D85A30')}
             >
               Access Dashboard
             </button>
@@ -154,85 +179,115 @@ export default function TeacherDashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="bg-white border-b border-gray-100 py-3 px-4 md:px-6 flex items-center justify-between max-w-6xl mx-auto">
-        <p className="text-sm font-medium text-gray-600">Teacher Dashboard</p>
+    <div className="min-h-screen" style={{ backgroundColor: '#FDF6F0' }}>
+      <div
+        className="py-3 px-4 md:px-6 flex items-center justify-between max-w-6xl mx-auto"
+        style={{ backgroundColor: '#FFFFFF', borderBottom: '1px solid #F5C4B3' }}
+      >
+        <p className="text-sm font-medium" style={{ color: '#712B13' }}>Teacher Dashboard</p>
         <button
           onClick={() => setIsAuthenticated(false)}
-          className="text-sm text-gray-500 hover:text-gray-700"
+          className="text-sm transition-colors"
+          style={{ color: '#F0997B' }}
+          onMouseOver={(e) => (e.currentTarget.style.color = '#712B13')}
+          onMouseOut={(e) => (e.currentTarget.style.color = '#F0997B')}
         >
           Sign Out
         </button>
       </div>
 
       <main className="max-w-6xl mx-auto px-4 md:px-6 py-8">
-        <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-          <div className="px-6 py-4 border-b border-gray-200">
-            <h2 className="text-lg font-medium text-gray-900">Session History</h2>
-            <p className="text-sm text-gray-500 mt-1">
+        <div
+          className="rounded-lg overflow-hidden"
+          style={{ backgroundColor: '#FFFFFF', border: '1px solid #F5C4B3' }}
+        >
+          <div className="px-6 py-4" style={{ borderBottom: '1px solid #F5C4B3' }}>
+            <h2 className="text-lg font-medium" style={{ color: '#712B13' }}>Session History</h2>
+            <p className="text-sm mt-1" style={{ color: '#993C1D', opacity: 0.7 }}>
               View all student tutoring sessions
             </p>
           </div>
 
           {isLoading ? (
-            <div className="px-6 py-12 text-center text-gray-500">
+            <div className="px-6 py-12 text-center text-sm" style={{ color: '#F0997B' }}>
               Loading sessions...
             </div>
           ) : sessions.length === 0 ? (
-            <div className="px-6 py-12 text-center text-gray-500">
+            <div className="px-6 py-12 text-center text-sm" style={{ color: '#F0997B' }}>
               No sessions yet
             </div>
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full">
-                <thead className="bg-gray-50 border-b border-gray-200">
+                <thead style={{ backgroundColor: '#FDF6F0', borderBottom: '1px solid #F5C4B3' }}>
                   <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider" style={{ color: '#993C1D' }}>
                       Student Name
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider" style={{ color: '#993C1D' }}>
                       Subject
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider" style={{ color: '#993C1D' }}>
                       Date
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider" style={{ color: '#993C1D' }}>
                       Duration
                     </th>
-                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider" style={{ color: '#993C1D' }}>
                       Actions
                     </th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-gray-200">
-                  {sessions.map((session) => (
-                    <tr key={session.id} className="hover:bg-gray-50">
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                        {session.student_name}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                        {session.subject}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                        <span>{formatDate(session.started_at)}</span>
-                        <span className="text-gray-400 ml-2">
-                          {formatTime(session.started_at)}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                        {formatDuration(session)}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-right">
-                        <button
-                          onClick={() => viewSession(session)}
-                          className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-[#1B4F8A] hover:bg-[#1B4F8A]/5 rounded-md transition-colors"
-                        >
-                          <Eye className="w-4 h-4" />
-                          View
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
+                <tbody>
+                  {sessions.map((session, idx) => {
+                    const avatarStyle = AVATAR_STYLES[idx % AVATAR_STYLES.length];
+                    return (
+                      <tr
+                        key={session.id}
+                        style={{ borderBottom: '1px solid #F5C4B3' }}
+                        onMouseOver={(e) => (e.currentTarget.style.backgroundColor = '#FDF6F0')}
+                        onMouseOut={(e) => (e.currentTarget.style.backgroundColor = 'transparent')}
+                      >
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="flex items-center gap-3">
+                            <div
+                              className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-semibold flex-shrink-0"
+                              style={{ backgroundColor: avatarStyle.bg, color: avatarStyle.text }}
+                            >
+                              {session.student_name.charAt(0).toUpperCase()}
+                            </div>
+                            <span className="text-sm font-medium" style={{ color: '#712B13' }}>
+                              {session.student_name}
+                            </span>
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm" style={{ color: '#993C1D' }}>
+                          {session.subject}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm">
+                          <span style={{ color: '#712B13' }}>{formatDate(session.started_at)}</span>
+                          <span className="ml-2" style={{ color: '#F0997B' }}>
+                            {formatTime(session.started_at)}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm" style={{ color: '#993C1D' }}>
+                          {formatDuration(session)}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-right">
+                          <button
+                            onClick={() => viewSession(session)}
+                            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium rounded-md transition-colors"
+                            style={{ color: '#D85A30' }}
+                            onMouseOver={(e) => (e.currentTarget.style.backgroundColor = '#FAECE7')}
+                            onMouseOut={(e) => (e.currentTarget.style.backgroundColor = 'transparent')}
+                          >
+                            <Eye className="w-4 h-4" />
+                            View
+                          </button>
+                        </td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
             </div>
@@ -241,35 +296,47 @@ export default function TeacherDashboard() {
       </main>
 
       {selectedSession && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-lg w-full max-w-2xl max-h-[80vh] flex flex-col">
-            <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center p-4 z-50">
+          <div
+            className="w-full max-w-2xl max-h-[80vh] flex flex-col rounded-xl"
+            style={{ backgroundColor: '#FFFFFF', border: '1px solid #F5C4B3' }}
+          >
+            <div className="px-6 py-4 flex items-center justify-between" style={{ borderBottom: '1px solid #F5C4B3' }}>
               <div>
-                <h3 className="text-lg font-medium text-gray-900">
+                <h3 className="text-lg font-medium" style={{ color: '#712B13' }}>
                   Session Transcript
                 </h3>
-                <p className="text-sm text-gray-500 mt-0.5">
+                <p className="text-sm mt-0.5" style={{ color: '#993C1D', opacity: 0.8 }}>
                   {selectedSession.student_name} — {selectedSession.subject}
                   {selectedSession.duration != null && (
-                    <span className="ml-2 text-gray-400">· {formatDuration(selectedSession)}</span>
+                    <span className="ml-2" style={{ color: '#F0997B' }}>· {formatDuration(selectedSession)}</span>
                   )}
                 </p>
               </div>
               <button
                 onClick={() => setSelectedSession(null)}
-                className="p-2 text-gray-400 hover:text-gray-600 rounded-lg hover:bg-gray-100"
+                className="p-2 rounded-lg transition-colors"
+                style={{ color: '#F0997B' }}
+                onMouseOver={(e) => {
+                  e.currentTarget.style.color = '#712B13';
+                  e.currentTarget.style.backgroundColor = '#FAECE7';
+                }}
+                onMouseOut={(e) => {
+                  e.currentTarget.style.color = '#F0997B';
+                  e.currentTarget.style.backgroundColor = 'transparent';
+                }}
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
 
-            <div className="flex-1 overflow-y-auto px-6 py-4">
+            <div className="flex-1 overflow-y-auto px-6 py-4" style={{ backgroundColor: '#FDF6F0' }}>
               {isLoadingMessages ? (
-                <div className="text-center text-gray-400 text-sm py-8">
+                <div className="text-center text-sm py-8" style={{ color: '#F0997B' }}>
                   Loading messages...
                 </div>
               ) : !selectedSession.messages || selectedSession.messages.length === 0 ? (
-                <div className="text-center text-gray-400 text-sm py-8">
+                <div className="text-center text-sm py-8" style={{ color: '#F0997B' }}>
                   No messages recorded for this session.
                 </div>
               ) : (
@@ -280,13 +347,26 @@ export default function TeacherDashboard() {
                       className={`flex ${message.role === 'student' ? 'justify-end' : 'justify-start'}`}
                     >
                       <div
-                        className={`max-w-[80%] px-4 py-3 rounded-2xl ${
+                        className="max-w-[80%] px-4 py-3 rounded-2xl"
+                        style={
                           message.role === 'student'
-                            ? 'bg-[#1B4F8A] text-white rounded-br-md'
-                            : 'bg-gray-100 text-gray-800 rounded-bl-md'
-                        }`}
+                            ? {
+                                backgroundColor: '#993C1D',
+                                color: '#FAECE7',
+                                borderBottomRightRadius: '6px',
+                              }
+                            : {
+                                backgroundColor: '#FFFFFF',
+                                color: '#712B13',
+                                border: '1px solid #F5C4B3',
+                                borderBottomLeftRadius: '6px',
+                              }
+                        }
                       >
-                        <p className="text-xs font-medium mb-1 opacity-60 capitalize">
+                        <p
+                          className="text-xs font-medium mb-1 capitalize"
+                          style={{ opacity: 0.6 }}
+                        >
                           {message.role === 'student' ? 'Student' : 'Sage'}
                         </p>
                         {message.image_url && (
@@ -302,9 +382,7 @@ export default function TeacherDashboard() {
                           </p>
                         )}
                         {message.created_at && (
-                          <p className={`text-xs mt-2 ${
-                            message.role === 'student' ? 'text-white/60' : 'text-gray-400'
-                          }`}>
+                          <p className="text-xs mt-2" style={{ opacity: 0.5 }}>
                             {formatTime(message.created_at)}
                           </p>
                         )}
@@ -315,10 +393,13 @@ export default function TeacherDashboard() {
               )}
             </div>
 
-            <div className="px-6 py-4 border-t border-gray-200">
+            <div className="px-6 py-4" style={{ borderTop: '1px solid #F5C4B3' }}>
               <button
                 onClick={() => setSelectedSession(null)}
-                className="w-full py-2.5 px-4 bg-gray-100 text-gray-700 rounded-lg font-medium hover:bg-gray-200 transition-colors"
+                className="w-full py-2.5 px-4 rounded-lg font-medium transition-colors"
+                style={{ backgroundColor: '#FAECE7', color: '#712B13' }}
+                onMouseOver={(e) => (e.currentTarget.style.backgroundColor = '#F5C4B3')}
+                onMouseOut={(e) => (e.currentTarget.style.backgroundColor = '#FAECE7')}
               >
                 Close
               </button>

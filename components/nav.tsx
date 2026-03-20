@@ -15,12 +15,12 @@ export default function Nav() {
   const [mobileOpen, setMobileOpen] = useState(false);
 
   return (
-    <nav className="bg-white border-b border-gray-100">
+    <nav style={{ backgroundColor: '#FFFFFF', borderBottom: '1px solid #F5C4B3' }}>
       <div className="max-w-6xl mx-auto px-4 md:px-6">
         <div className="flex items-center justify-between h-14">
           <Link href="/" className="flex items-center gap-2">
-            <GraduationCap className="w-5 h-5 text-[#1B4F8A]" />
-            <span className="text-lg font-semibold text-[#1B4F8A] tracking-tight">
+            <GraduationCap className="w-5 h-5" style={{ color: '#D85A30' }} />
+            <span className="text-lg font-semibold tracking-tight" style={{ color: '#712B13' }}>
               Scholara
             </span>
           </Link>
@@ -32,11 +32,24 @@ export default function Nav() {
                 <Link
                   key={href}
                   href={href}
-                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-colors"
+                  style={
                     active
-                      ? 'bg-[#1B4F8A]/8 text-[#1B4F8A]'
-                      : 'text-gray-500 hover:text-gray-800 hover:bg-gray-50'
-                  }`}
+                      ? { backgroundColor: '#FAECE7', color: '#D85A30' }
+                      : { color: '#993C1D' }
+                  }
+                  onMouseOver={(e) => {
+                    if (!active) {
+                      (e.currentTarget as HTMLAnchorElement).style.backgroundColor = '#FAECE7';
+                      (e.currentTarget as HTMLAnchorElement).style.color = '#712B13';
+                    }
+                  }}
+                  onMouseOut={(e) => {
+                    if (!active) {
+                      (e.currentTarget as HTMLAnchorElement).style.backgroundColor = 'transparent';
+                      (e.currentTarget as HTMLAnchorElement).style.color = '#993C1D';
+                    }
+                  }}
                 >
                   <Icon className="w-4 h-4" />
                   {label}
@@ -47,7 +60,10 @@ export default function Nav() {
 
           <button
             onClick={() => setMobileOpen((v) => !v)}
-            className="md:hidden p-2 text-gray-500 hover:text-gray-800 rounded-md"
+            className="md:hidden p-2 rounded-md transition-colors"
+            style={{ color: '#993C1D' }}
+            onMouseOver={(e) => (e.currentTarget.style.color = '#712B13')}
+            onMouseOut={(e) => (e.currentTarget.style.color = '#993C1D')}
           >
             {mobileOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
           </button>
@@ -55,7 +71,7 @@ export default function Nav() {
       </div>
 
       {mobileOpen && (
-        <div className="md:hidden border-t border-gray-100 bg-white">
+        <div className="md:hidden" style={{ borderTop: '1px solid #F5C4B3', backgroundColor: '#FFFFFF' }}>
           <div className="px-4 py-2 space-y-1">
             {navLinks.map(({ href, label, icon: Icon }) => {
               const active = pathname === href;
@@ -64,11 +80,12 @@ export default function Nav() {
                   key={href}
                   href={href}
                   onClick={() => setMobileOpen(false)}
-                  className={`flex items-center gap-2 px-3 py-2.5 rounded-md text-sm font-medium transition-colors ${
+                  className="flex items-center gap-2 px-3 py-2.5 rounded-md text-sm font-medium transition-colors"
+                  style={
                     active
-                      ? 'bg-[#1B4F8A]/8 text-[#1B4F8A]'
-                      : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
-                  }`}
+                      ? { backgroundColor: '#FAECE7', color: '#D85A30' }
+                      : { color: '#993C1D' }
+                  }
                 >
                   <Icon className="w-4 h-4" />
                   {label}
