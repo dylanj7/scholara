@@ -29,6 +29,7 @@ export default function TeacherDashboard() {
   const [sessions, setSessions] = useState<Session[]>([]);
   const [selectedSession, setSelectedSession] = useState<Session | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [isLoadingMessages, setIsLoadingMessages] = useState(false);
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
@@ -45,13 +46,19 @@ export default function TeacherDashboard() {
     setIsLoading(true);
     const { data, error } = await supabase
       .from('sessions')
-      .select('*')
+      .select('*, messages(*)')
       .order('started_at', { ascending: false });
 
     if (error) {
       console.error('Error loading sessions:', error);
     } else {
-      setSessions(data || []);
+      const enriched = (data || []).map((s: any) => ({
+        ...s,
+        messages: s.messages && s.messages.length > 0
+          ? s.messages.sort((a: any, b: any) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime())
+          : (s.messages_json || null),
+      }));
+      setSessions(enriched);
     }
     setIsLoading(false);
   };
@@ -89,6 +96,21 @@ export default function TeacherDashboard() {
       return `${diff} min${diff !== 1 ? 's' : ''}`;
     }
     return '—';
+  };
+
+  const viewSession = async (session: Session) => {
+    setSelectedSession(session);
+    setIsLoadingMessages(true);
+    const { data } = await supabase
+      .from('messages')
+      .select('*')
+      .eq('session_id', session.id)
+      .order('created_at', { ascending: true });
+
+    if (data && data.length > 0) {
+      setSelectedSession({ ...session, messages: data });
+    }
+    setIsLoadingMessages(false);
   };
 
   if (!isAuthenticated) {
@@ -202,7 +224,7 @@ export default function TeacherDashboard() {
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-right">
                         <button
-                          onClick={() => setSelectedSession(session)}
+                          onClick={() => viewSession(session)}
                           className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-[#1B4F8A] hover:bg-[#1B4F8A]/5 rounded-md transition-colors"
                         >
                           <Eye className="w-4 h-4" />
@@ -242,7 +264,11 @@ export default function TeacherDashboard() {
             </div>
 
             <div className="flex-1 overflow-y-auto px-6 py-4">
-              {!selectedSession.messages || selectedSession.messages.length === 0 ? (
+              {isLoadingMessages ? (
+                <div className="text-center text-gray-400 text-sm py-8">
+                  Loading messages...
+                </div>
+              ) : !selectedSession.messages || selectedSession.messages.length === 0 ? (
                 <div className="text-center text-gray-400 text-sm py-8">
                   No messages recorded for this session.
                 </div>
