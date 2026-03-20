@@ -76,6 +76,39 @@ export default function StudentChat() {
     if (msgData) setMessages([msgData]);
   };
 
+  const calculateEngagementScore = (msgs: Message[]): number => {
+    const studentMsgs = msgs.filter((m) => m.role === 'student');
+    if (studentMsgs.length === 0) return 1;
+
+    const SHORTCUT_PHRASES = [
+      'just tell me',
+      'give me the answer',
+      'do it for me',
+      'just write',
+    ];
+
+    let score = 5;
+
+    const count = studentMsgs.length;
+    if (count >= 10) score += 2;
+    else if (count >= 6) score += 1.5;
+    else if (count >= 3) score += 1;
+    else if (count === 1) score -= 1;
+
+    const avgLen = studentMsgs.reduce((sum, m) => sum + m.content.length, 0) / count;
+    if (avgLen >= 150) score += 2;
+    else if (avgLen >= 80) score += 1.5;
+    else if (avgLen >= 40) score += 1;
+    else if (avgLen < 15) score -= 1;
+
+    const shortcutCount = studentMsgs.filter((m) =>
+      SHORTCUT_PHRASES.some((phrase) => m.content.toLowerCase().includes(phrase))
+    ).length;
+    score -= shortcutCount * 1.5;
+
+    return Math.min(10, Math.max(1, Math.round(score)));
+  };
+
   const endSession = async () => {
     if (sessionId && sessionStartTime) {
       const duration = Math.floor((Date.now() - sessionStartTime.getTime()) / 1000);
@@ -86,12 +119,15 @@ export default function StudentChat() {
         created_at: msg.created_at,
       }));
 
+      const engagement_score = calculateEngagementScore(messages);
+
       await supabase
         .from('sessions')
         .update({
           ended_at: new Date().toISOString(),
           duration,
           messages: messagesJson,
+          engagement_score,
         })
         .eq('id', sessionId);
     }

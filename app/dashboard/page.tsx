@@ -20,6 +20,7 @@ interface Session {
   duration: number | null;
   messages: MessageEntry[] | null;
   created_at: string;
+  engagement_score: number | null;
 }
 
 const AVATAR_STYLES = [
@@ -27,6 +28,25 @@ const AVATAR_STYLES = [
   { bg: '#FAEEDA', text: '#854F0B' },
   { bg: '#FDF6F0', text: '#712B13' },
 ];
+
+function EngagementBadge({ score }: { score: number | null }) {
+  if (score === null) return <span style={{ color: '#F0997B' }}>—</span>;
+  const isGreen = score >= 7;
+  const isYellow = score >= 4 && score <= 6;
+  const style = isGreen
+    ? { backgroundColor: '#DCFCE7', color: '#15803D', border: '1px solid #BBF7D0' }
+    : isYellow
+    ? { backgroundColor: '#FEF9C3', color: '#854D0E', border: '1px solid #FEF08A' }
+    : { backgroundColor: '#FEE2E2', color: '#991B1B', border: '1px solid #FECACA' };
+  return (
+    <span
+      className="inline-flex items-center justify-center w-8 h-6 rounded-full text-xs font-semibold"
+      style={style}
+    >
+      {score}
+    </span>
+  );
+}
 
 export default function TeacherDashboard() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -233,6 +253,9 @@ export default function TeacherDashboard() {
                     <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider" style={{ color: '#993C1D' }}>
                       Duration
                     </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider" style={{ color: '#993C1D' }}>
+                      Engagement
+                    </th>
                     <th className="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider" style={{ color: '#993C1D' }}>
                       Actions
                     </th>
@@ -272,6 +295,9 @@ export default function TeacherDashboard() {
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm" style={{ color: '#993C1D' }}>
                           {formatDuration(session)}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <EngagementBadge score={session.engagement_score} />
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-right">
                           <button
