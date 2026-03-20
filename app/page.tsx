@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
-import { Send } from 'lucide-react';
+import { Send, Paperclip, X, Image as ImageIcon } from 'lucide-react';
 import { supabase, Message } from '@/lib/supabase';
 
 type Subject = 'Essay Writing' | 'Mathematics';
@@ -9,6 +9,7 @@ type Subject = 'Essay Writing' | 'Mathematics';
 interface ChatMessage {
   role: 'user' | 'assistant';
   content: string;
+  imageUrl?: string;
 }
 
 export default function StudentChat() {
@@ -19,7 +20,10 @@ export default function StudentChat() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputValue, setInputValue] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [pendingImage, setPendingImage] = useState<{ file: File; previewUrl: string } | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -29,15 +33,18 @@ export default function StudentChat() {
     scrollToBottom();
   }, [messages]);
 
+  useEffect(() => {
+    return () => {
+      if (pendingImage) URL.revokeObjectURL(pendingImage.previewUrl);
+    };
+  }, [pendingImage]);
+
   const startSession = async () => {
     if (!studentName.trim()) return;
 
     const { data, error } = await supabase
       .from('sessions')
-      .insert({
-        student_name: studentName.trim(),
-        subject: subject,
-      })
+      .insert({ student_name: studentName.trim(), subject })
       .select()
       .single();
 
@@ -51,97 +58,115 @@ export default function StudentChat() {
 
     const welcomeMessage = subject === 'Essay Writing'
       ? `Hello ${studentName}! I'm here to help you with essay writing. Whether you need help brainstorming ideas, structuring your essay, improving your thesis statement, or refining your writing style, I'm here to assist. What would you like to work on today?`
-      : `Hello ${studentName}! I'm here to help you with mathematics. Whether you're working on algebra, geometry, calculus, or any other math topic, I can guide you through problems step by step. What would you like help with today?`;
+      : `Hello ${studentName}! I'm here to help you with mathematics. You can type your question or upload a photo of a problem using the attachment button. What would you like help with today?`;
 
     const { data: msgData } = await supabase
       .from('messages')
-      .insert({
-        session_id: data.id,
-        role: 'assistant',
-        content: welcomeMessage,
-      })
+      .insert({ session_id: data.id, role: 'assistant', content: welcomeMessage })
       .select()
       .single();
 
-    if (msgData) {
-      setMessages([msgData]);
+    if (msgData) setMessages([msgData]);
+  };
+
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (!file.type.startsWith('image/')) return;
+    const previewUrl = URL.createObjectURL(file);
+    setPendingImage({ file, previewUrl });
+    e.target.value = '';
+  };
+
+  const uploadImage = async (file: File): Promise<string | null> => {
+    const ext = file.name.split('.').pop() || 'jpg';
+    const fileName = `${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+
+    const { error } = await supabase.storage
+      .from('math-images')
+      .upload(fileName, file, { contentType: file.type });
+
+    if (error) {
+      console.error('Error uploading image:', error);
+      return null;
     }
+
+    const { data } = supabase.storage.from('math-images').getPublicUrl(fileName);
+    return data.publicUrl;
   };
 
   const sendMessage = async () => {
-    if (!inputValue.trim() || !sessionId || isLoading) return;
+    if ((!inputValue.trim() && !pendingImage) || !sessionId || isLoading) return;
 
     const userMessage = inputValue.trim();
     setInputValue('');
     setIsLoading(true);
+
+    let imageUrl: string | null = null;
+
+    if (pendingImage) {
+      setIsUploading(true);
+      imageUrl = await uploadImage(pendingImage.file);
+      URL.revokeObjectURL(pendingImage.previewUrl);
+      setPendingImage(null);
+      setIsUploading(false);
+    }
 
     const { data: userMsgData } = await supabase
       .from('messages')
       .insert({
         session_id: sessionId,
         role: 'student',
-        content: userMessage,
+        content: userMessage || (imageUrl ? 'Uploaded an image' : ''),
+        image_url: imageUrl,
       })
       .select()
       .single();
 
-    if (userMsgData) {
-      setMessages((prev) => [...prev, userMsgData]);
-    }
+    if (userMsgData) setMessages((prev) => [...prev, userMsgData]);
 
     try {
       const chatHistory: ChatMessage[] = messages.map((msg) => ({
         role: msg.role === 'student' ? 'user' : 'assistant',
         content: msg.content,
+        imageUrl: msg.image_url ?? undefined,
       }));
-      chatHistory.push({ role: 'user', content: userMessage });
+      chatHistory.push({
+        role: 'user',
+        content: userMessage || 'I uploaded an image of a math problem.',
+        imageUrl: imageUrl ?? undefined,
+      });
 
       const response = await fetch('/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          messages: chatHistory,
-          subject: subject,
-          studentName: studentName,
-        }),
+        body: JSON.stringify({ messages: chatHistory, subject, studentName }),
       });
 
-      if (!response.ok) {
-        throw new Error('Failed to get response');
-      }
+      if (!response.ok) throw new Error('Failed to get response');
 
       const data = await response.json();
-      const aiResponse = data.message;
 
       const { data: aiMsgData } = await supabase
         .from('messages')
-        .insert({
-          session_id: sessionId,
-          role: 'assistant',
-          content: aiResponse,
-        })
+        .insert({ session_id: sessionId, role: 'assistant', content: data.message })
         .select()
         .single();
 
-      if (aiMsgData) {
-        setMessages((prev) => [...prev, aiMsgData]);
-      }
+      if (aiMsgData) setMessages((prev) => [...prev, aiMsgData]);
     } catch (error) {
       console.error('Error sending message:', error);
-      const errorMessage = 'Sorry, I encountered an error. Please try again.';
       const { data: errorMsgData } = await supabase
         .from('messages')
         .insert({
           session_id: sessionId,
           role: 'assistant',
-          content: errorMessage,
+          content: 'Sorry, I encountered an error. Please try again.',
         })
         .select()
         .single();
 
-      if (errorMsgData) {
-        setMessages((prev) => [...prev, errorMsgData]);
-      }
+      if (errorMsgData) setMessages((prev) => [...prev, errorMsgData]);
     }
 
     setIsLoading(false);
@@ -225,8 +250,14 @@ export default function StudentChat() {
           <h1 className="text-2xl font-semibold text-[#1B4F8A] tracking-tight">
             Scholara
           </h1>
-          <div className="text-sm text-gray-500">
-            {subject} - {studentName}
+          <div className="flex items-center gap-2 text-sm text-gray-500">
+            {subject === 'Mathematics' && (
+              <span className="inline-flex items-center gap-1 text-xs bg-blue-50 text-[#1B4F8A] px-2 py-0.5 rounded-full border border-blue-100">
+                <ImageIcon className="w-3 h-3" />
+                Image upload on
+              </span>
+            )}
+            <span>{subject} - {studentName}</span>
           </div>
         </div>
       </header>
@@ -246,9 +277,19 @@ export default function StudentChat() {
                       : 'bg-gray-100 text-gray-800 rounded-bl-md'
                   }`}
                 >
-                  <p className="text-sm leading-relaxed whitespace-pre-wrap">
-                    {message.content}
-                  </p>
+                  {message.image_url && (
+                    <img
+                      src={message.image_url}
+                      alt="Uploaded math problem"
+                      className="mb-2 rounded-lg max-w-full max-h-64 object-contain bg-white"
+                    />
+                  )}
+                  {message.content && message.content !== 'Uploaded an image' && (
+                    <p className="text-sm leading-relaxed whitespace-pre-wrap">
+                      {message.content}
+                    </p>
+                  )}
+                  {message.image_url && !message.content || message.content === 'Uploaded an image' ? null : null}
                 </div>
               </div>
             ))}
@@ -268,18 +309,59 @@ export default function StudentChat() {
         </div>
 
         <div className="border-t border-gray-100 px-4 py-4">
-          <div className="flex gap-3">
+          {pendingImage && (
+            <div className="mb-3 flex items-start gap-2">
+              <div className="relative inline-block">
+                <img
+                  src={pendingImage.previewUrl}
+                  alt="Pending upload"
+                  className="h-20 w-20 object-cover rounded-lg border border-gray-200"
+                />
+                <button
+                  onClick={() => {
+                    URL.revokeObjectURL(pendingImage.previewUrl);
+                    setPendingImage(null);
+                  }}
+                  className="absolute -top-2 -right-2 w-5 h-5 bg-gray-700 text-white rounded-full flex items-center justify-center hover:bg-gray-900"
+                >
+                  <X className="w-3 h-3" />
+                </button>
+              </div>
+              <span className="text-xs text-gray-500 mt-1">Image ready to send</span>
+            </div>
+          )}
+
+          <div className="flex gap-2">
+            {subject === 'Mathematics' && (
+              <>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  onChange={handleFileSelect}
+                  className="hidden"
+                />
+                <button
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={isLoading || isUploading}
+                  className="px-3 py-3 text-gray-400 hover:text-[#1B4F8A] hover:bg-gray-50 rounded-lg border border-gray-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  title="Upload image"
+                >
+                  <Paperclip className="w-5 h-5" />
+                </button>
+              </>
+            )}
             <input
               type="text"
               value={inputValue}
               onChange={(e) => setInputValue(e.target.value)}
               onKeyDown={handleKeyDown}
-              placeholder="Type your message..."
+              placeholder={pendingImage ? 'Add a message (optional)...' : 'Type your message...'}
               className="flex-1 px-4 py-3 rounded-lg border border-gray-200 focus:border-[#1B4F8A] focus:ring-1 focus:ring-[#1B4F8A] outline-none text-gray-900 placeholder-gray-400"
             />
             <button
               onClick={sendMessage}
-              disabled={!inputValue.trim() || isLoading}
+              disabled={(!inputValue.trim() && !pendingImage) || isLoading || isUploading}
               className="px-4 py-3 bg-[#1B4F8A] text-white rounded-lg hover:bg-[#163f6e] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
               <Send className="w-5 h-5" />

@@ -254,9 +254,18 @@ export default function TeacherDashboard() {
                           : 'bg-gray-100 text-gray-800 rounded-bl-md'
                       }`}
                     >
-                      <p className="text-sm leading-relaxed whitespace-pre-wrap">
-                        {message.content}
-                      </p>
+                      {message.image_url && (
+                        <img
+                          src={message.image_url}
+                          alt="Uploaded math problem"
+                          className="mb-2 rounded-lg max-w-full max-h-48 object-contain bg-white"
+                        />
+                      )}
+                      {message.content && message.content !== 'Uploaded an image' && (
+                        <p className="text-sm leading-relaxed whitespace-pre-wrap">
+                          {message.content}
+                        </p>
+                      )}
                       <p className={`text-xs mt-2 ${
                         message.role === 'student' ? 'text-white/70' : 'text-gray-400'
                       }`}>

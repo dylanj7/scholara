@@ -19,5 +19,6 @@ export interface Message {
   session_id: string;
   role: 'student' | 'assistant';
   content: string;
+  image_url: string | null;
   created_at: string;
 }

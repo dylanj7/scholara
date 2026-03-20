@@ -8,6 +8,7 @@ const anthropic = new Anthropic({
 interface ChatMessage {
   role: 'user' | 'assistant';
   content: string;
+  imageUrl?: string;
 }
 
 interface ChatRequest {
@@ -57,7 +58,13 @@ When helping with math:
 - Point out common mistakes and how to avoid them
 - Celebrate progress and build confidence
 
+If the student uploads an image of a math problem, carefully read and analyze it, then guide them through solving it step by step.
+
 You can help with arithmetic, algebra, geometry, trigonometry, calculus, statistics, and other math topics. Adapt your explanations to the student's level. Keep responses focused and educational.`;
+
+type AnthropicContent =
+  | { type: 'text'; text: string }
+  | { type: 'image'; source: { type: 'url'; url: string } };
 
 export async function POST(request: NextRequest) {
   try {
@@ -75,10 +82,18 @@ export async function POST(request: NextRequest) {
       ? `${ESSAY_WRITING_SYSTEM_PROMPT}\n\nYou are currently helping a student named ${studentName}.`
       : `${MATHEMATICS_SYSTEM_PROMPT}\n\nYou are currently helping a student named ${studentName}.`;
 
-    const anthropicMessages = messages.map((msg) => ({
-      role: msg.role as 'user' | 'assistant',
-      content: msg.content,
-    }));
+    const anthropicMessages = messages.map((msg) => {
+      if (msg.imageUrl && msg.role === 'user') {
+        const content: AnthropicContent[] = [
+          { type: 'image', source: { type: 'url', url: msg.imageUrl } },
+        ];
+        if (msg.content) {
+          content.push({ type: 'text', text: msg.content });
+        }
+        return { role: msg.role, content };
+      }
+      return { role: msg.role, content: msg.content };
+    });
 
     const response = await anthropic.messages.create({
       model: 'claude-sonnet-4-20250514',
