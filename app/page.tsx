@@ -12,10 +12,47 @@ interface ChatMessage {
   imageUrl?: string;
 }
 
-const QUOTE = {
-  text: 'The beautiful thing about learning is that no one can take it away from you.',
-  author: 'B.B. King',
-};
+const QUOTES = [
+  { text: 'The mind is not a vessel to be filled, but a fire to be kindled.', author: 'Plutarch' },
+  { text: 'Tell me and I forget. Teach me and I remember. Involve me and I learn.', author: 'Benjamin Franklin' },
+  { text: 'Education is not the filling of a pail, but the lighting of a fire.', author: 'W.B. Yeats' },
+  { text: 'The art of teaching is the art of assisting discovery.', author: 'Mark Van Doren' },
+  { text: 'Struggle is not the enemy of learning. It is the engine of it.', author: 'Scholara' },
+  { text: 'The more that you read, the more things you will know.', author: 'Dr. Seuss' },
+  { text: 'An investment in knowledge pays the best interest.', author: 'Benjamin Franklin' },
+  { text: "You don't understand anything until you learn it more than one way.", author: 'Marvin Minsky' },
+  { text: 'Curiosity is the wick in the candle of learning.', author: 'William A. Ward' },
+  { text: 'Every student can learn. Just not on the same day, or in the same way.', author: 'George Evans' },
+];
+
+function RotatingQuote() {
+  const [index, setIndex] = useState(0);
+  const [visible, setVisible] = useState(true);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setVisible(false);
+      setTimeout(() => {
+        setIndex((i) => (i + 1) % QUOTES.length);
+        setVisible(true);
+      }, 600);
+    }, 20000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const quote = QUOTES[index];
+  return (
+    <div
+      className="text-center transition-opacity duration-600"
+      style={{ opacity: visible ? 1 : 0, transition: 'opacity 600ms ease' }}
+    >
+      <p className="text-xl font-medium italic leading-snug mb-2" style={{ color: '#993C1D', opacity: 0.75 }}>
+        "{quote.text}"
+      </p>
+      <p className="text-sm" style={{ color: '#D85A30', opacity: 0.55 }}>— {quote.author}</p>
+    </div>
+  );
+}
 
 export default function StudentChat() {
   const [studentName, setStudentName] = useState('');
@@ -266,17 +303,16 @@ export default function StudentChat() {
       <div className="min-h-screen flex flex-col" style={{ backgroundColor: '#FDF6F0' }}>
         <div className="flex-1 flex flex-col items-center justify-center px-4 py-12">
           <div className="w-full max-w-md">
-            <div className="mb-10 text-center">
-              <div
-                className="inline-block mb-4 px-3 py-1 rounded-full text-xs font-medium tracking-wide uppercase"
-                style={{ backgroundColor: '#FAECE7', color: '#993C1D' }}
-              >
-                AI Tutoring
+            <div className="mb-10">
+              <div className="text-center mb-6">
+                <div
+                  className="inline-block mb-6 px-3 py-1 rounded-full text-xs font-medium tracking-wide uppercase"
+                  style={{ backgroundColor: '#FAECE7', color: '#993C1D' }}
+                >
+                  AI Tutoring
+                </div>
+                <RotatingQuote />
               </div>
-              <blockquote className="text-2xl font-semibold leading-snug mb-3" style={{ color: '#712B13' }}>
-                "{QUOTE.text}"
-              </blockquote>
-              <p className="text-sm" style={{ color: '#D85A30', opacity: 0.7 }}>— {QUOTE.author}</p>
             </div>
 
             <div
