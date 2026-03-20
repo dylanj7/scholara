@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
-import { Send, Paperclip, X, Image as ImageIcon } from 'lucide-react';
+import { Send, Paperclip, X, Image as ImageIcon, ChevronLeft, RefreshCw } from 'lucide-react';
 import { supabase, Message } from '@/lib/supabase';
 
 type Subject = 'Essay Writing' | 'Mathematics';
@@ -11,6 +11,11 @@ interface ChatMessage {
   content: string;
   imageUrl?: string;
 }
+
+const QUOTE = {
+  text: 'The beautiful thing about learning is that no one can take it away from you.',
+  author: 'B.B. King',
+};
 
 export default function StudentChat() {
   const [studentName, setStudentName] = useState('');
@@ -67,6 +72,14 @@ export default function StudentChat() {
       .single();
 
     if (msgData) setMessages([msgData]);
+  };
+
+  const endSession = () => {
+    setSessionStarted(false);
+    setSessionId(null);
+    setMessages([]);
+    setInputValue('');
+    setPendingImage(null);
   };
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -181,60 +194,63 @@ export default function StudentChat() {
 
   if (!sessionStarted) {
     return (
-      <div className="min-h-screen bg-white flex flex-col items-center justify-center px-4">
-        <div className="w-full max-w-md">
-          <p className="text-center text-gray-500 text-sm mb-8">Start a new tutoring session</p>
-
-          <div className="space-y-6">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Select Subject
-              </label>
-              <div className="flex gap-3">
-                <button
-                  onClick={() => setSubject('Essay Writing')}
-                  className={`flex-1 py-3 px-4 rounded-lg border-2 text-sm font-medium transition-colors ${
-                    subject === 'Essay Writing'
-                      ? 'border-[#1B4F8A] bg-[#1B4F8A] text-white'
-                      : 'border-gray-200 text-gray-700 hover:border-gray-300'
-                  }`}
-                >
-                  Essay Writing
-                </button>
-                <button
-                  onClick={() => setSubject('Mathematics')}
-                  className={`flex-1 py-3 px-4 rounded-lg border-2 text-sm font-medium transition-colors ${
-                    subject === 'Mathematics'
-                      ? 'border-[#1B4F8A] bg-[#1B4F8A] text-white'
-                      : 'border-gray-200 text-gray-700 hover:border-gray-300'
-                  }`}
-                >
-                  Mathematics
-                </button>
+      <div className="min-h-screen bg-white flex flex-col">
+        <div className="flex-1 flex flex-col items-center justify-center px-4 py-12">
+          <div className="w-full max-w-md">
+            <div className="mb-10 text-center">
+              <div className="inline-block mb-4 px-3 py-1 rounded-full bg-[#EBF2FB] text-[#1B4F8A] text-xs font-medium tracking-wide uppercase">
+                AI Tutoring
               </div>
+              <blockquote className="text-2xl font-semibold text-gray-800 leading-snug mb-3">
+                "{QUOTE.text}"
+              </blockquote>
+              <p className="text-sm text-gray-400">— {QUOTE.author}</p>
             </div>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Your First Name
-              </label>
-              <input
-                type="text"
-                value={studentName}
-                onChange={(e) => setStudentName(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && startSession()}
-                placeholder="Enter your first name"
-                className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:border-[#1B4F8A] focus:ring-1 focus:ring-[#1B4F8A] outline-none text-gray-900 placeholder-gray-400"
-              />
-            </div>
+            <div className="bg-gray-50 rounded-2xl border border-gray-100 p-6 space-y-5">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Select Subject
+                </label>
+                <div className="flex gap-2">
+                  {(['Essay Writing', 'Mathematics'] as Subject[]).map((s) => (
+                    <button
+                      key={s}
+                      onClick={() => setSubject(s)}
+                      className={`flex-1 py-2.5 px-3 rounded-lg border-2 text-sm font-medium transition-all ${
+                        subject === s
+                          ? 'border-[#1B4F8A] bg-[#1B4F8A] text-white shadow-sm'
+                          : 'border-gray-200 bg-white text-gray-600 hover:border-gray-300'
+                      }`}
+                    >
+                      {s}
+                    </button>
+                  ))}
+                </div>
+              </div>
 
-            <button
-              onClick={startSession}
-              disabled={!studentName.trim()}
-              className="w-full py-3 px-4 bg-[#1B4F8A] text-white rounded-lg font-medium hover:bg-[#163f6e] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-            >
-              Start Session
-            </button>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Your First Name
+                </label>
+                <input
+                  type="text"
+                  value={studentName}
+                  onChange={(e) => setStudentName(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && startSession()}
+                  placeholder="Enter your first name"
+                  className="w-full px-4 py-3 rounded-lg border border-gray-200 bg-white focus:border-[#1B4F8A] focus:ring-1 focus:ring-[#1B4F8A] outline-none text-gray-900 placeholder-gray-400"
+                />
+              </div>
+
+              <button
+                onClick={startSession}
+                disabled={!studentName.trim()}
+                className="w-full py-3 px-4 bg-[#1B4F8A] text-white rounded-lg font-medium hover:bg-[#163f6e] disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+              >
+                Start Session
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -243,16 +259,35 @@ export default function StudentChat() {
 
   return (
     <div className="flex flex-col" style={{ height: 'calc(100vh - 57px)' }}>
-      <div className="border-b border-gray-100 py-2.5 px-4 bg-white">
+      <div className="border-b border-gray-100 py-2 px-4 bg-white">
         <div className="max-w-3xl mx-auto flex items-center justify-between">
-          <div className="flex items-center gap-2 text-sm text-gray-500">
+          <div className="flex items-center gap-3">
+            <button
+              onClick={endSession}
+              className="flex items-center gap-1.5 text-sm text-gray-400 hover:text-gray-700 transition-colors"
+            >
+              <ChevronLeft className="w-4 h-4" />
+              Back
+            </button>
+            <span className="text-gray-200">|</span>
+            <span className="text-sm text-gray-600 font-medium">{studentName}</span>
+            <span className="text-xs text-gray-400">&mdash; {subject}</span>
+          </div>
+          <div className="flex items-center gap-2">
             {subject === 'Mathematics' && (
               <span className="inline-flex items-center gap-1 text-xs bg-blue-50 text-[#1B4F8A] px-2 py-0.5 rounded-full border border-blue-100">
                 <ImageIcon className="w-3 h-3" />
                 Image upload on
               </span>
             )}
-            <span>{subject} - {studentName}</span>
+            <button
+              onClick={endSession}
+              title="New session"
+              className="flex items-center gap-1.5 text-xs text-gray-400 hover:text-[#1B4F8A] transition-colors px-2 py-1 rounded-md hover:bg-gray-50"
+            >
+              <RefreshCw className="w-3.5 h-3.5" />
+              New session
+            </button>
           </div>
         </div>
       </div>
@@ -284,7 +319,6 @@ export default function StudentChat() {
                       {message.content}
                     </p>
                   )}
-                  {message.image_url && !message.content || message.content === 'Uploaded an image' ? null : null}
                 </div>
               </div>
             ))}
