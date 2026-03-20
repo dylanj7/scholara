@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { X, Eye, Lock } from 'lucide-react';
+import { X, Eye, Lock, RefreshCw } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 
 interface MessageEntry {
@@ -221,11 +221,24 @@ export default function TeacherDashboard() {
           className="rounded-lg overflow-hidden"
           style={{ backgroundColor: '#FFFFFF', border: '1px solid #F5C4B3' }}
         >
-          <div className="px-6 py-4" style={{ borderBottom: '1px solid #F5C4B3' }}>
-            <h2 className="text-lg font-medium" style={{ color: '#712B13' }}>Session History</h2>
-            <p className="text-sm mt-1" style={{ color: '#993C1D', opacity: 0.7 }}>
-              View all student tutoring sessions
-            </p>
+          <div className="px-6 py-4 flex items-center justify-between" style={{ borderBottom: '1px solid #F5C4B3' }}>
+            <div>
+              <h2 className="text-lg font-medium" style={{ color: '#712B13' }}>Session History</h2>
+              <p className="text-sm mt-1" style={{ color: '#993C1D', opacity: 0.7 }}>
+                View all student tutoring sessions
+              </p>
+            </div>
+            <button
+              onClick={loadSessions}
+              disabled={isLoading}
+              className="flex items-center gap-1.5 text-sm px-3 py-1.5 rounded-lg transition-colors disabled:opacity-50"
+              style={{ color: '#D85A30', border: '1px solid #F5C4B3' }}
+              onMouseOver={(e) => (e.currentTarget.style.backgroundColor = '#FAECE7')}
+              onMouseOut={(e) => (e.currentTarget.style.backgroundColor = 'transparent')}
+            >
+              <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
+              Refresh
+            </button>
           </div>
 
           {isLoading ? (

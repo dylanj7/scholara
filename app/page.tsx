@@ -224,7 +224,18 @@ export default function StudentChat() {
         .select()
         .single();
 
-      if (aiMsgData) setMessages((prev) => [...prev, aiMsgData]);
+      if (aiMsgData) {
+        const updatedMessages = [...messages];
+        if (userMsgData) updatedMessages.push(userMsgData);
+        updatedMessages.push(aiMsgData);
+        setMessages((prev) => [...prev, aiMsgData]);
+
+        const engagement_score = calculateEngagementScore(updatedMessages);
+        await supabase
+          .from('sessions')
+          .update({ engagement_score })
+          .eq('id', sessionId);
+      }
     } catch (error) {
       console.error('Error sending message:', error);
       const { data: errorMsgData } = await supabase
