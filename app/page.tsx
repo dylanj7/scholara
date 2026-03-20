@@ -183,9 +183,7 @@ export default function StudentChat() {
     return (
       <div className="min-h-screen bg-white flex flex-col items-center justify-center px-4">
         <div className="w-full max-w-md">
-          <h1 className="text-4xl font-semibold text-[#1B4F8A] text-center mb-12 tracking-tight">
-            Scholara
-          </h1>
+          <p className="text-center text-gray-500 text-sm mb-8">Start a new tutoring session</p>
 
           <div className="space-y-6">
             <div>
@@ -244,12 +242,9 @@ export default function StudentChat() {
   }
 
   return (
-    <div className="min-h-screen bg-white flex flex-col">
-      <header className="border-b border-gray-100 py-4 px-4">
+    <div className="flex flex-col" style={{ height: 'calc(100vh - 57px)' }}>
+      <div className="border-b border-gray-100 py-2.5 px-4 bg-white">
         <div className="max-w-3xl mx-auto flex items-center justify-between">
-          <h1 className="text-2xl font-semibold text-[#1B4F8A] tracking-tight">
-            Scholara
-          </h1>
           <div className="flex items-center gap-2 text-sm text-gray-500">
             {subject === 'Mathematics' && (
               <span className="inline-flex items-center gap-1 text-xs bg-blue-50 text-[#1B4F8A] px-2 py-0.5 rounded-full border border-blue-100">
@@ -260,7 +255,7 @@ export default function StudentChat() {
             <span>{subject} - {studentName}</span>
           </div>
         </div>
-      </header>
+      </div>
 
       <main className="flex-1 overflow-hidden flex flex-col max-w-3xl mx-auto w-full">
         <div className="flex-1 overflow-y-auto px-4 py-6">

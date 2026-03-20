@@ -88,10 +88,7 @@ export default function TeacherDashboard() {
       <div className="min-h-screen bg-white flex flex-col items-center justify-center px-4">
         <div className="w-full max-w-sm">
           <div className="text-center mb-8">
-            <h1 className="text-3xl font-semibold text-[#1B4F8A] mb-2 tracking-tight">
-              Scholara
-            </h1>
-            <p className="text-gray-500 text-sm">Teacher Dashboard</p>
+            <p className="text-gray-500 text-sm">Enter the teacher password to continue</p>
           </div>
 
           <form onSubmit={handleLogin} className="space-y-4">
@@ -128,22 +125,15 @@ export default function TeacherDashboard() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <header className="bg-white border-b border-gray-200 py-4 px-4 md:px-6">
-        <div className="max-w-6xl mx-auto flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-semibold text-[#1B4F8A] tracking-tight">
-              Scholara
-            </h1>
-            <p className="text-sm text-gray-500">Teacher Dashboard</p>
-          </div>
-          <button
-            onClick={() => setIsAuthenticated(false)}
-            className="text-sm text-gray-500 hover:text-gray-700"
-          >
-            Sign Out
-          </button>
-        </div>
-      </header>
+      <div className="bg-white border-b border-gray-100 py-3 px-4 md:px-6 flex items-center justify-between max-w-6xl mx-auto">
+        <p className="text-sm font-medium text-gray-600">Teacher Dashboard</p>
+        <button
+          onClick={() => setIsAuthenticated(false)}
+          className="text-sm text-gray-500 hover:text-gray-700"
+        >
+          Sign Out
+        </button>
+      </div>
 
       <main className="max-w-6xl mx-auto px-4 md:px-6 py-8">
         <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
