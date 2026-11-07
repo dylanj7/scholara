@@ -6,6 +6,8 @@ Most AI homework tools optimize for giving students an answer. Scholara optimize
 
 **Stack:** Next.js 13 (App Router) · TypeScript · Tailwind + shadcn/ui · Supabase (Postgres, Storage, RLS) · Anthropic Claude API
 
+> Built in high school as a minimum viable product. See [Security review](#security-review-november-2026) for the holes I found when I went back through it.
+
 ---
 
 ## The core idea
@@ -100,14 +102,24 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=
 
 Deploys to Netlify via `@netlify/plugin-nextjs` (see `netlify.toml`).
 
-## Known limitations
+## Security review (November 2026)
 
-Honest notes on where this is a prototype rather than a product:
+I built Scholara in high school as a minimum viable product, to test whether a tutor that refuses to give answers could still keep students engaged. It was never hardened to hold real student data. When I went back through the code, I found four real holes:
 
-- **The teacher password is a client-side string comparison**, not authentication. It gates the UI, not the data — the RLS policies allow anonymous reads, so the dashboard is a demo surface. Real deployment needs Supabase Auth with role-based policies.
-- **RLS is permissive by design.** Policies allow anonymous insert/select so the demo works without a login flow. A production version scopes sessions to an authenticated student and their teacher.
-- **Engagement scoring is heuristic.** Message length is a proxy for effort, and a terse student who genuinely gets it will score low. It's meant as a signal to look closer, not a grade.
-- **Engagement is computed client-side** on session end, so a session abandoned by closing the tab never gets scored.
+| Hole | Why it matters | The fix |
+|---|---|---|
+| **The teacher password lives in client code.** `app/dashboard/page.tsx` compares input against a hardcoded string. | Anything in a client component ships to every visitor's browser, so anyone can read it. | Real teacher accounts with Supabase Auth, checked on the server. |
+| **The database rules allow anonymous reads.** The RLS policies let the public anon key select every session and message. | Anyone could query every student's transcript directly and skip the password page entirely. The password only gated the UI. | Students can only insert. Reads require an authenticated teacher, enforced by RLS. |
+| **The engagement score is calculated and written by the browser.** | A student could open dev tools and set their own score. Sessions closed by shutting the tab never get scored. | Compute the score on the server when the session ends. |
+| **`/api/chat` has no login check and no rate limit.** | Anyone could script requests and run up the Anthropic bill. | Require a valid session and cap requests per session per day. |
+
+Smaller issues: student photos sit in a public storage bucket, and the student's name is inserted into the system prompt, which is a small prompt-injection opening.
+
+**What I took from it:** Scholara trusted the browser. [Grove](https://github.com/dylanj7/grove), which I built after, makes the database the boundary. Every table has row-level security tied to the signed-in user, every API route checks login on the server, and the AI endpoint has a per-user daily limit. That shift, from trusting the app to making the data layer enforce who sees what, is the biggest thing I learned building these.
+
+### Other limitations
+
+- **Engagement scoring is a heuristic.** Message length stands in for effort, so a terse student who genuinely gets it will score low. It's a signal for a teacher to look closer, not a grade.
 
 ## License
 
